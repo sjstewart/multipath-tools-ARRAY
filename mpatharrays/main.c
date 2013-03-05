@@ -130,7 +130,8 @@ load_mp_vecs ()
 		/*
 		 * Print it!
  		 */
-		dump_path(pp);
+		//dump_path(pp);
+		rdac_inquirer(pp);
 	}
 
 	return 0;

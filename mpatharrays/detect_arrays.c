@@ -2,7 +2,7 @@
  * 
  *
  */
-
+#include "libmpatharrays.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector.h>
@@ -10,6 +10,7 @@
 
 vector mpath_storage_arrays;
 
+/*
 struct mparray {
 	int testint;
 	char * storage_array_name;
@@ -42,8 +43,10 @@ struct mparray * alloc_mparray (void);
 struct mparray_lun * alloc_mparray_lun (void);
 int add_lun_to_array (struct mparray * mpa, struct mparray_lun * mpal);
 int add_path_to_lun (struct mparray_lun * mpal, struct mparray_path * mpap);
+*/
 void detect_arrays (vector pathvec);
 
+/*
 
 struct mparray *
 alloc_mparray ()
@@ -112,7 +115,7 @@ add_path_to_lun (struct mparray_lun * mpal, struct mparray_path * mpap)
 
 	return 1;
 }
-
+*/
 void
 detect_arrays (vector pathvec)
 {
