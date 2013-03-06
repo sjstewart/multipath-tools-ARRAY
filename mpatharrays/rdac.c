@@ -4,6 +4,7 @@
 #include <structs.h>
 #include <sg_include.h>
 #include <debug.h>
+#include "libmpatharrays.h"
 
 #define INQUIRY_CMD	0x12
 #define INQUIRY_CMDLEN	6
@@ -24,7 +25,7 @@ void hexdump(void *mem, unsigned int len)
         unsigned int i, j;
         
 	printf("Dumping memory address 0x%x\n", mem);
-	
+
         for(i = 0; i < len + ((len % HEXDUMP_COLS) ? (HEXDUMP_COLS - len % HEXDUMP_COLS) : 0); i++)
         {
                 /* print offset */
@@ -89,13 +90,13 @@ unsigned char * send_inq(int page, const char *dev, int fd)
         io_hdr.timeout = 60000;
         io_hdr.pack_id = 0;
         if (ioctl(fd, SG_IO, &io_hdr) < 0) {
-		printf("Sending inq command failed\n");
+	//	printf("Sending inq command failed\n");
 		return NULL;
 //                pp_rdac_log(0, "sending inquiry command failed");
      //           goto out;
         }
         if (io_hdr.info & SG_INFO_OK_MASK) {
-		printf("error\n");
+//		printf("error\n");
 		return NULL;
    //             pp_rdac_log(0, "inquiry command indicates error");
  //              goto out;
@@ -105,20 +106,62 @@ unsigned char * send_inq(int page, const char *dev, int fd)
 }
 
 
-extern void rdac_inquirer(struct path * pp)
+extern int rdac_inquirer(struct mparray_pathinq * mpap, struct path * pp)
 {
 	unsigned char * sense_buffer;
-	unsigned char array_name[16];
-	memset(array_name, 0, 16);
-	printf("calling testfunc for %s\n", pp->dev);
 
+	if( !mpap->array_id ) {
+		printf("ALLOCATE\n");
+		mpap->controller_id = malloc(sizeof(unsigned char));
+		mpap->array_id = malloc(sizeof(unsigned char) * 16);
+		mpap->array_label = malloc(sizeof(unsigned char) * 60);
+	}
 	if( (sense_buffer = send_inq(0xc8, pp->dev, pp->fd))!= NULL) {
 		/* Copy the 16 byte array identifier out of the sense buffer */
-		memcpy(array_name, sense_buffer+90, 16);
-	}
-	hexdump(array_name, 16);
+		memcpy(mpap->array_id, sense_buffer+90, 16);
+	} else
+		goto error;
+
 	free(sense_buffer);
-//	if( (sense_buffer = send_inq(0xc9, pp->dev, pp->fd))!= NULL)
-//		hexdump(sense_buffer, 256);
-//	free(sense_buffer);
+	
+        /* Get the controller slot ID */
+        if ( (sense_buffer = send_inq(0xc4, pp->dev, pp->fd)) != NULL) {
+                if (sense_buffer[29] == 0x31) {
+                        memset( mpap->controller_id, 0x41, 1);
+                } else if (sense_buffer[29] == 0x32) {
+                        memset( mpap->controller_id, 0x42, 1);
+                }
+        } else 
+		goto error;
+
+        free(sense_buffer);
+
+       /* Get ownership infos */
+        if ( (sense_buffer = send_inq(0xc9, pp->dev, pp->fd)) != NULL) {
+                /* Volume Current Ownership */
+                if ( (sense_buffer[8] & 0x01) == 0x01 ) {
+                        mpap->owner = 1;
+                } else
+                        mpap->owner = 0;
+
+                /* Volume preferred path */
+                switch ( sense_buffer[9] & 0x0F ) {
+                case 0x01:
+                        mpap->preferred = 1;
+                        break;
+                case 0x02:
+                        mpap->preferred = 0;
+                        break;
+                default:
+                        mpap->preferred = -1;
+                        break;
+                }
+        } else
+		goto error;
+        free(sense_buffer);
+	
+	return 1;
+error:
+	free(sense_buffer);
+	return 0;
 }
