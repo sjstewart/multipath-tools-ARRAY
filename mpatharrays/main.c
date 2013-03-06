@@ -20,6 +20,7 @@
 #include <config.h>
 #include <discovery.h>
 #include <print.h>
+#include "libmpatharrays.h"
 
 int logsink;
 struct vectors vecs;
@@ -99,6 +100,7 @@ load_mp_vecs ()
 	int i;
 	//struct multipath *mpp;
 	struct path *pp;
+	struct mparray_pathinq mpap;
 	vector curmp = NULL;
 	vector pathvec = NULL;
 
@@ -124,15 +126,27 @@ load_mp_vecs ()
 		return 1;
 
 	get_path_layout(pathvec, 0);
-        //filter_pathvec(pathvec, NULL);
 
+	// Init to 0. The inquirer will malloc
+	INIT_MPARRAY_PATHINQ( mpap );
 	vector_foreach_slot (pathvec, pp, i) {
 		/*
 		 * Print it!
  		 */
 		//dump_path(pp);
-		rdac_inquirer(pp);
+
+		/* Call the RDAC inquirier, move on to the next path if it errors */
+		if(!rdac_inquirer(&mpap, pp))
+			continue;
+		
+		printf("%s CTLR: %s  OWNER: %d  PREF: %d \n", pp->dev, mpap.controller_id, mpap.owner, mpap.preferred);
 	}
+
+	hexdump(&mpap, sizeof(struct mparray_pathinq));
+	
+	// Clear out memory assigned from the heap
+	CLEAR_MPARRAY_PATHINQ( mpap );
+
 
 	return 0;
 out:
