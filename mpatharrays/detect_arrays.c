@@ -17,7 +17,7 @@ struct mparray {
 	vector luns;
 };
 
-struct mparray_lun {
+struct mpa_lun {
 	char * wwid;
 	char * name;
 	char * dmname;
@@ -28,7 +28,7 @@ struct mparray_lun {
 	struct mparray * mpa;
 };
 
-struct mparray_path {
+struct mpa_path {
 	char * devname;
 	int host;
 	int controller;
@@ -36,13 +36,13 @@ struct mparray_path {
 	int lun;
 
 	// Pointer back to the LUN
-	struct mparray_lun * mpal;
+	struct mpa_lun * mpal;
 };
 
 struct mparray * alloc_mparray (void);
-struct mparray_lun * alloc_mparray_lun (void);
-int add_lun_to_array (struct mparray * mpa, struct mparray_lun * mpal);
-int add_path_to_lun (struct mparray_lun * mpal, struct mparray_path * mpap);
+struct mpa_lun * alloc_mpa_lun (void);
+int add_lun_to_array (struct mparray * mpa, struct mpa_lun * mpal);
+int add_path_to_lun (struct mpa_lun * mpal, struct mpa_path * mpap);
 */
 void detect_arrays (vector pathvec);
 
@@ -59,22 +59,22 @@ alloc_mparray ()
 	return mpsa;
 }
 
-struct mparray_lun *
-alloc_mparray_lun ()
+struct mpa_lun *
+alloc_mpa_lun ()
 {
-	struct mparray_lun * mpal;
+	struct mpa_lun * mpal;
 
-	mpal = malloc(sizeof(struct mparray_lun));
+	mpal = malloc(sizeof(struct mpa_lun));
 	mpal->paths = vector_alloc();
 
 	return mpal;
 }
 
 int
-add_lun_to_array (struct mparray * mpa, struct mparray_lun * mpal)
+add_lun_to_array (struct mparray * mpa, struct mpa_lun * mpal)
 {
 	int i = 0;
-	struct mparray_lun * mpal_tmp;
+	struct mpa_lun * mpal_tmp;
 
 	// Traverse the list until we've gone one entry too far
 	// Then decrement the pointer and insert the new entry at that place
@@ -103,7 +103,7 @@ add_lun_to_array (struct mparray * mpa, struct mparray_lun * mpal)
 
 // TODO:  Some checking and stuff to make sure this will work properly... Check for duplicate entries?
 int
-add_path_to_lun (struct mparray_lun * mpal, struct mparray_path * mpap)
+add_path_to_lun (struct mpa_lun * mpal, struct mpa_path * mpap)
 {
 
 	if (vector_insert_slot( mpal->paths, 0, mpap ))
@@ -119,28 +119,39 @@ add_path_to_lun (struct mparray_lun * mpal, struct mparray_path * mpap)
 void
 detect_arrays (vector pathvec)
 {
-	int i;
+	int i, j;
 	struct mparray * mps;
 
-	mpath_storage_arrays = vector_alloc();
+	arrays = vector_alloc();
 	for (i = 0; i < 5; i++) {
 		mps = alloc_mparray();
 		mps->testint = i;
-		mps->storage_array_name = "This is my array or something";
+		printf("before switch\n");
+		switch(i){
+		case 4:
+		mps->id = "AAAAAAAA";
+		break;
+		case 2:
+		mps->id = "BBBBBBBB";
+		break;
+		case 1:
+		mps->id = "CCCCCCCC";
+		break;
+		case 3:
+		mps->id = "DDDDDDDD";
+		break;
+		case 0:
+		mps->id = "CCCCCCCC";
+		break;
+		
+		}
 
 		// Let's add something to this vector!
-		if (!vector_alloc_slot(mpath_storage_arrays))
-			goto it_didnt_work;
-
-		vector_set_slot(mpath_storage_arrays, mps);
-	}
-
-	vector_foreach_slot(mpath_storage_arrays, mps, i){
-		printf("This is a test %i %s\n", mps->testint, mps->storage_array_name);
+		add_array( mps );
+		vector_foreach_slot(arrays, mps, j){
+			printf("This is a test slot %i %i %s\n", j, mps->testint, mps->id);
+		}
 	}
 
 	return;
-
-it_didnt_work:
-	printf("It didn't work\n");
 }

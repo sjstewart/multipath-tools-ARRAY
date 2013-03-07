@@ -100,7 +100,7 @@ load_mp_vecs ()
 	int i;
 	//struct multipath *mpp;
 	struct path *pp;
-	struct mparray_pathinq mpap;
+	struct mpa_pathinq mpap;
 	vector curmp = NULL;
 	vector pathvec = NULL;
 
@@ -142,7 +142,7 @@ load_mp_vecs ()
 		printf("%s CTLR: %s  OWNER: %d  PREF: %d \n", pp->dev, mpap.controller_id, mpap.owner, mpap.preferred);
 	}
 
-	hexdump(&mpap, sizeof(struct mparray_pathinq));
+	hexdump(&mpap, sizeof(struct mpa_pathinq));
 	
 	// Clear out memory assigned from the heap
 	CLEAR_MPARRAY_PATHINQ( mpap );
