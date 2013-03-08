@@ -44,8 +44,7 @@ vector arrays;
 
 /* Macros */
 #define INIT_MPARRAY_PATHINQ(PATHINQ)  memset(&(PATHINQ), 0, sizeof(struct mpa_pathinq));
-#define CLEAR_MPARRAY_PATHINQ(PATHINQ) hexdump( (PATHINQ).array_id, 16);\
-					free( (PATHINQ).array_id );\
+#define CLEAR_MPARRAY_PATHINQ(PATHINQ)  free( (PATHINQ).array_id );\
 					free( (PATHINQ).array_label );\
 					free( (PATHINQ).controller_id );
 
@@ -55,6 +54,7 @@ extern struct mpa_lun * alloc_mpa_lun (void);
 extern int add_lun_to_array (struct mparray * mpa, struct mpa_lun * mpal);
 extern int add_ctlr_to_lun (struct mpa_lun * mpal, struct mpa_ctlr * mpac);
 extern int add_ctlr_to_array (struct mparray * mpa, struct mpa_ctlr * mpac);
-extern int add_path_to_ctlr (struct mpa_ctlr * mpac, struct mpa_path * mpap);
+extern int add_path_to_ctlr (struct mpa_ctlr * mpac, struct path * pp);
+extern int add_path (struct path * pp, struct mpa_pathinq * pathinq);
 
 #endif /* _LIBMPATHARRAYS_H */
