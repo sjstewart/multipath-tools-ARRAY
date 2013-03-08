@@ -89,34 +89,61 @@ send_inq(int page, unsigned char * sense_buffer, const char *dev, int fd)
         io_hdr.timeout = 60000;
         io_hdr.pack_id = 0;
         if (ioctl(fd, SG_IO, &io_hdr) < 0) {
+<<<<<<< HEAD
 		return 0;
         }
         if (io_hdr.info & SG_INFO_OK_MASK) {
 		return 0;
+=======
+	//	printf("Sending inq command failed\n");
+		return NULL;
+//                pp_rdac_log(0, "sending inquiry command failed");
+     //           goto out;
+        }
+        if (io_hdr.info & SG_INFO_OK_MASK) {
+//		printf("error\n");
+		return NULL;
+   //             pp_rdac_log(0, "inquiry command indicates error");
+ //              goto out;
+>>>>>>> fce1916b6fa66b11269033937324ebc0da7a4d79
         }
 
 	return 1;
 }
 
 
+<<<<<<< HEAD
 extern int 
 rdac_inquirer(struct mpa_pathinq * mpap, struct path * pp)
 {
 	unsigned char sense_buffer[256];
 
 	if( !mpap->array_id ) {
+=======
+extern int rdac_inquirer(struct mparray_pathinq * mpap, struct path * pp)
+{
+	unsigned char * sense_buffer;
+
+	if( !mpap->array_id ) {
+		printf("ALLOCATE\n");
+>>>>>>> fce1916b6fa66b11269033937324ebc0da7a4d79
 		mpap->controller_id = malloc(sizeof(unsigned char));
 		mpap->array_id = malloc(sizeof(unsigned char) * 16);
 		mpap->array_label = malloc(sizeof(unsigned char) * 60);
 	}
+<<<<<<< HEAD
 	
 	/* Get the array ID from VPD page 0xC8 */
 	if( send_inq(0xc8, sense_buffer, pp->dev, pp->fd) ) {
+=======
+	if( (sense_buffer = send_inq(0xc8, pp->dev, pp->fd))!= NULL) {
+>>>>>>> fce1916b6fa66b11269033937324ebc0da7a4d79
 		/* Copy the 16 byte array identifier out of the sense buffer */
 		memcpy(mpap->array_id, sense_buffer+90, 16);
 	} else
 		goto error;
 
+<<<<<<< HEAD
         /* Get the controller slot ID */
         if ( send_inq(0xc4, sense_buffer, pp->dev, pp->fd) ) {
 		/* Controller Slot A */
@@ -137,6 +164,28 @@ rdac_inquirer(struct mpa_pathinq * mpap, struct path * pp)
                 if ( (sense_buffer[8] & 0x01) == 0x01 )
                         mpap->owner = 1;
                 else
+=======
+	free(sense_buffer);
+	
+        /* Get the controller slot ID */
+        if ( (sense_buffer = send_inq(0xc4, pp->dev, pp->fd)) != NULL) {
+                if (sense_buffer[29] == 0x31) {
+                        memset( mpap->controller_id, 0x41, 1);
+                } else if (sense_buffer[29] == 0x32) {
+                        memset( mpap->controller_id, 0x42, 1);
+                }
+        } else 
+		goto error;
+
+        free(sense_buffer);
+
+       /* Get ownership infos */
+        if ( (sense_buffer = send_inq(0xc9, pp->dev, pp->fd)) != NULL) {
+                /* Volume Current Ownership */
+                if ( (sense_buffer[8] & 0x01) == 0x01 ) {
+                        mpap->owner = 1;
+                } else
+>>>>>>> fce1916b6fa66b11269033937324ebc0da7a4d79
                         mpap->owner = 0;
 
                 /* Volume preferred path */
@@ -153,8 +202,16 @@ rdac_inquirer(struct mpa_pathinq * mpap, struct path * pp)
                 }
         } else
 		goto error;
+<<<<<<< HEAD
 	
 	return 1;
 error:
+=======
+        free(sense_buffer);
+	
+	return 1;
+error:
+	free(sense_buffer);
+>>>>>>> fce1916b6fa66b11269033937324ebc0da7a4d79
 	return 0;
 }

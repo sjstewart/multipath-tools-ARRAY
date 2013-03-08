@@ -40,10 +40,22 @@ struct mpa_pathinq {
 	int preferred;
 };
 
+<<<<<<< HEAD
 vector arrays;
 
 /* Macros */
 #define INIT_MPARRAY_PATHINQ(PATHINQ)  memset(&(PATHINQ), 0, sizeof(struct mpa_pathinq));
+=======
+struct mparray_pathinq {
+	char * array_id;
+	char * array_label;
+	char * controller_id;
+	int owner;
+	int preferred;
+};
+
+#define INIT_MPARRAY_PATHINQ(PATHINQ)  memset(&(PATHINQ), 0, sizeof(struct mparray_pathinq));
+>>>>>>> fce1916b6fa66b11269033937324ebc0da7a4d79
 #define CLEAR_MPARRAY_PATHINQ(PATHINQ) hexdump( (PATHINQ).array_id, 16);\
 					free( (PATHINQ).array_id );\
 					free( (PATHINQ).array_label );\
