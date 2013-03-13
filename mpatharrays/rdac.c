@@ -13,6 +13,9 @@
 #define HEXDUMP_COLS 8
 #endif
 
+extern int 
+rdac_inquirer(struct mpa_pathinq * mpap, struct path * pp);
+
 /**
  * debug function
  * source: http://grapsus.net/blog/post/Hexadecimal-dump-in-C
@@ -70,11 +73,10 @@ void hexdump(void *mem, unsigned int len)
 int
 send_inq(int page, unsigned char * sense_buffer, const char *dev, int fd)
 {
-        unsigned char sb[128];
+        unsigned char sb[255];
         unsigned char inqCmdBlk[INQUIRY_CMDLEN] = {INQUIRY_CMD, 1, page, 0,
                                                 sizeof(sb), 0};
         struct sg_io_hdr io_hdr;
-        int ret = 0;
 
         memset(&io_hdr, 0, sizeof (struct sg_io_hdr));
         memset(sense_buffer, 0, 256);
@@ -103,17 +105,23 @@ extern int
 rdac_inquirer(struct mpa_pathinq * mpap, struct path * pp)
 {
 	unsigned char sense_buffer[256];
+	int i;
 
 	if( !mpap->array_id ) {
 		mpap->controller_id = malloc(sizeof(unsigned char));
-		mpap->array_id = malloc(sizeof(unsigned char) * 16);
-		mpap->array_label = malloc(sizeof(unsigned char) * 60);
+		mpap->array_id = malloc(sizeof(unsigned char) * 32);
+		mpap->array_label = malloc(sizeof(unsigned char) * 30);
 	}
 	
 	/* Get the array ID from VPD page 0xC8 */
 	if( send_inq(0xc8, sense_buffer, pp->dev, pp->fd) ) {
 		/* Copy the 16 byte array identifier out of the sense buffer */
-		memcpy(mpap->array_id, sense_buffer+90, 16);
+		for (i = 0; i < 16; i++)
+			sprintf(mpap->array_id+i*2, "%02x", *(sense_buffer + 90 + i) );
+		
+		/* Copy the array label. There's padding null characters we have to skip, so that's what's going on, here */
+		for (i = 0; i < 30; i++)
+			memcpy(mpap->array_label+i, sense_buffer+108+i*2, 1);
 	} else
 		goto error;
 
@@ -153,7 +161,7 @@ rdac_inquirer(struct mpa_pathinq * mpap, struct path * pp)
                 }
         } else
 		goto error;
-	
+		
 	return 1;
 error:
 	return 0;

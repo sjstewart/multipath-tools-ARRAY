@@ -29,6 +29,8 @@ int load_mp_vecs(void);
 int dump_path (struct path * pp);
 int dump_multipath(struct multipath * mpp);
 static int get_dm_mpvec (vector curmp, vector pathvec, char * refwwid);
+extern int 
+rdac_inquirer(struct mpa_pathinq * mpap, struct path * pp);
 
 /*
  * This function already exists, but it's been stripped down for use here
@@ -106,6 +108,7 @@ load_mp_vecs ()
 
 	curmp = vector_alloc();
 	pathvec = vector_alloc();
+	arrays = vector_alloc();
 
 	if (!curmp || !pathvec) {
 		condlog(0, "it didn't work");
@@ -139,14 +142,17 @@ load_mp_vecs ()
 		if(!rdac_inquirer(&mpap, pp))
 			continue;
 		
-		printf("%s CTLR: %s  OWNER: %d  PREF: %d \n", pp->dev, mpap.controller_id, mpap.owner, mpap.preferred);
+		add_path(pp, &mpap, vecs);		
+		//printf("%s CTLR: %s  OWNER: %d  PREF: %d \n", pp->dev, mpap.controller_id, mpap.owner, mpap.preferred);
 	}
 
-	hexdump(&mpap, sizeof(struct mpa_pathinq));
-	
 	// Clear out memory assigned from the heap
 	CLEAR_MPARRAY_PATHINQ( mpap );
 
+	struct mparray * mpa;
+	vector_foreach_slot(arrays, mpa, i) {
+		dump_mparray(mpa);
+	}
 
 	return 0;
 out:
@@ -212,7 +218,7 @@ main (int argc, char *argv[])
 	/* Temp function */
 	load_mp_vecs();
 	
-	detect_arrays();
+	//detect_arrays();
 	
 	exit(0);
 }

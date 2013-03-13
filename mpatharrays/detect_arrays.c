@@ -116,6 +116,7 @@ add_path_to_lun (struct mpa_lun * mpal, struct mpa_path * mpap)
 	return 1;
 }
 */
+/*
 void
 detect_arrays (vector pathvec)
 {
@@ -155,3 +156,4 @@ detect_arrays (vector pathvec)
 
 	return;
 }
+*/
